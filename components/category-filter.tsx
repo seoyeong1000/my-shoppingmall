@@ -28,6 +28,8 @@ export default function CategoryFilter({ selected, allCount, categories }: Categ
       const params = new URLSearchParams(searchParams.toString());
       if (!cat) params.delete("category");
       else params.set("category", cat);
+      // 카테고리 변경 시 페이지를 1로 리셋
+      params.delete("page");
       const url = `${pathname}?${params.toString()}`;
       console.info("navigate", { url });
       router.replace(url, { scroll: false });
