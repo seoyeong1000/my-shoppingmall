@@ -5,15 +5,20 @@
  * 상품 정보를 카드 형태로 표시하고, 클릭 시 상품 상세 페이지로 이동합니다.
  *
  * 주요 기능:
- * - 상품 정보 표시 (카테고리, 이름, 가격, 재고)
+ * - 상품 정보 표시 (이미지, 카테고리, 이름, 가격, 재고)
  * - 클릭 시 상품 상세 페이지로 이동
  * - 호버 효과 및 반응형 스타일
+ * - 이미지 없거나 로드 실패 시 placeholder 이미지 표시
  *
  * @dependencies
  * - next/link: 클라이언트 사이드 라우팅
+ * - next/image: 최적화된 이미지 표시
  */
 
+"use client";
+
 import Link from "next/link";
+import ProductImage from "@/components/product-image";
 
 export interface Product {
   id: string;
@@ -25,6 +30,7 @@ export interface Product {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  image_url?: string | null;
 }
 
 interface ProductCardProps {
@@ -38,6 +44,17 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/products/${product.id}`}>
       <div className="rounded-lg border p-4 hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col">
+        {/* 상품 이미지 */}
+        <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+          <ProductImage
+            imageUrl={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        </div>
+
         {/* 카테고리 */}
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {product.category ?? "기타"}

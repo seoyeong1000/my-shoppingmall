@@ -8,7 +8,7 @@
  * 주요 기능:
  * 1. URL 파라미터에서 상품 ID 추출
  * 2. Supabase에서 단일 상품 정보 조회
- * 3. 상품 상세 정보 표시 (이름, 설명, 가격, 카테고리, 재고)
+ * 3. 상품 상세 정보 표시 (이미지, 이름, 설명, 가격, 카테고리, 재고)
  * 4. 상품이 없을 경우 404 처리
  * 5. 장바구니 추가 버튼 UI (기능은 Phase 3에서 구현)
  * 6. 목록으로 돌아가기 링크
@@ -16,6 +16,7 @@
  * @dependencies
  * - @/lib/supabase/server: Supabase 클라이언트
  * - @/components/ui/button: 버튼 컴포넌트
+ * - @/components/product-image: 상품 이미지 컴포넌트
  * - @/lib/constants/categories: 카테고리 상수
  */
 
@@ -23,6 +24,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClerkSupabaseClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import ProductImage from "@/components/product-image";
 import { CATEGORIES } from "@/lib/constants/categories";
 import type { CategoryValue } from "@/lib/constants/categories";
 
@@ -38,6 +40,7 @@ export interface ProductRow {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  image_url?: string | null;
 }
 
 export default async function ProductDetailPage(props: { params: Params }) {
@@ -72,7 +75,11 @@ export default async function ProductDetailPage(props: { params: Params }) {
   const categoryLabel =
     CATEGORIES.find((c) => c.value === product.category)?.label ?? "기타";
 
-  console.info("product", { id: product.id, name: product.name });
+  console.info("product", { 
+    id: product.id, 
+    name: product.name,
+    imageUrl: product.image_url || "없음 (placeholder 사용)",
+  });
   console.groupEnd();
 
   return (
@@ -87,6 +94,18 @@ export default async function ProductDetailPage(props: { params: Params }) {
 
         {/* 상품 상세 정보 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border p-8 shadow-sm">
+          {/* 상품 이미지 */}
+          <div className="relative w-full aspect-square mb-8 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+            <ProductImage
+              imageUrl={product.image_url}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 800px"
+              priority
+            />
+          </div>
+
           {/* 카테고리 */}
           <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
             {categoryLabel}

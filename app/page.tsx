@@ -18,6 +18,7 @@ interface ProductRow {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  image_url?: string | null;
 }
 
 export default async function Home(props: { searchParams: SearchParams }) {
