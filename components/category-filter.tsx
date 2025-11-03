@@ -2,7 +2,13 @@
 
 import { useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CategoryItem {
   value: string;
@@ -22,12 +28,16 @@ export default function CategoryFilter({ selected, allCount, categories }: Categ
   const searchParams = useSearchParams();
 
   const setCategory = useCallback(
-    (cat?: string) => {
+    (cat: string) => {
       console.group("CategoryFilter");
-      console.info("click", { cat });
+      console.info("select", { cat });
       const params = new URLSearchParams(searchParams.toString());
-      if (!cat) params.delete("category");
-      else params.set("category", cat);
+      // "all" 값을 받으면 전체 상품을 보여주기 위해 category 파라미터 삭제
+      if (cat === "all") {
+        params.delete("category");
+      } else {
+        params.set("category", cat);
+      }
       // 카테고리 변경 시 페이지를 1로 리셋
       params.delete("page");
       const url = `${pathname}?${params.toString()}`;
@@ -38,33 +48,26 @@ export default function CategoryFilter({ selected, allCount, categories }: Categ
     [pathname, router, searchParams]
   );
 
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button
-        variant={selected ? "outline" : "default"}
-        onClick={() => setCategory(undefined)}
-      >
-        <span>전체</span>
-        <span className="ml-2 rounded-full bg-gray-200 dark:bg-gray-800 px-2 py-0.5 text-xs">
-          {allCount}
-        </span>
-      </Button>
+  // Select 컴포넌트의 value는 string이어야 하므로, undefined일 때 "all" 사용
+  const selectValue = selected ?? "all";
 
-      {categories.map((c) => {
-        const active = selected === c.value;
-        return (
-          <Button
-            key={c.value}
-            variant={active ? "default" : "outline"}
-            onClick={() => setCategory(c.value)}
-          >
-            <span>{c.label}</span>
-            <span className="ml-2 rounded-full bg-gray-200 dark:bg-gray-800 px-2 py-0.5 text-xs">
-              {c.count}
-            </span>
-          </Button>
-        );
-      })}
+  return (
+    <div className="w-full sm:w-auto sm:min-w-[200px]">
+      <Select value={selectValue} onValueChange={setCategory}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="카테고리를 선택하세요" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">
+            전체 ({allCount})
+          </SelectItem>
+          {categories.map((c) => (
+            <SelectItem key={c.value} value={c.value}>
+              {c.label} ({c.count})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
