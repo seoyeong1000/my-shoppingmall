@@ -4,6 +4,7 @@ import { RiSupabaseFill } from "react-icons/ri";
 import { createClerkSupabaseClient } from "@/lib/supabase/server";
 import { CATEGORIES, type CategoryValue } from "@/lib/constants/categories";
 import CategoryFilter from "@/components/category-filter";
+import PopularProductsSection from "@/components/popular-products-section";
 
 type SearchParams = Promise<{ category?: string }>;
 
@@ -45,6 +46,56 @@ export default async function Home(props: { searchParams: SearchParams }) {
   if (productsError) {
     console.error("productsError", productsError.message);
   }
+
+  // 인기 상품 조회 (order_items 기반 판매량 상위 4개)
+  console.group("HomePage:PopularProducts");
+  const { data: allOrderItems, error: orderItemsError } = await supabase
+    .from("order_items")
+    .select("product_id, quantity");
+
+  if (orderItemsError) {
+    console.error("orderItemsError", orderItemsError.message);
+  }
+
+  // product_id별 quantity 합계 계산
+  const salesByProduct: Record<string, number> = {};
+  if (allOrderItems) {
+    for (const item of allOrderItems) {
+      const productId = item.product_id;
+      salesByProduct[productId] = (salesByProduct[productId] || 0) + item.quantity;
+    }
+  }
+
+  // 판매량 기준 상위 4개 product_id 선택
+  const topProductIds = Object.entries(salesByProduct)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 4)
+    .map(([productId]) => productId);
+
+  console.info("salesByProduct", salesByProduct);
+  console.info("topProductIds", topProductIds);
+
+  // 상위 4개 상품 정보 조회
+  let popularProducts: ProductRow[] = [];
+  if (topProductIds.length > 0) {
+    const { data: popularData, error: popularError } = await supabase
+      .from("products")
+      .select("*")
+      .in("id", topProductIds)
+      .eq("is_active", true);
+
+    if (popularError) {
+      console.error("popularError", popularError.message);
+    } else if (popularData) {
+      // topProductIds 순서 유지
+      popularProducts = topProductIds
+        .map((id) => popularData.find((p) => p.id === id))
+        .filter((p): p is ProductRow => p !== undefined);
+    }
+  }
+
+  console.info("popularProducts count", popularProducts.length);
+  console.groupEnd();
 
   // 카테고리별 개수 계산 (전체 포함)
   const countPromises = [
@@ -105,6 +156,11 @@ export default async function Home(props: { searchParams: SearchParams }) {
           </Link>
         </div>
       </section>
+
+      {/* 인기 상품 섹션 */}
+      {popularProducts.length > 0 && (
+        <PopularProductsSection products={popularProducts} />
+      )}
 
       {/* 상품 섹션 */}
       <section className="w-full max-w-7xl mx-auto">
