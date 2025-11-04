@@ -1,14 +1,5 @@
 "use client";
 
-/**
- * @file components/cart-dialog.tsx
- * @description 장바구니 추가 성공 후 표시되는 Dialog 컴포넌트
- *
- * 장바구니에 상품을 추가한 후 사용자에게 다음 액션을 선택할 수 있도록 합니다.
- * - 장바구니로 이동: /cart 페이지로 이동
- * - 쇼핑 계속하기: Dialog를 닫고 현재 페이지에 머물기
- */
-
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -20,12 +11,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-interface CartDialogProps {
+interface AddToCartDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  productName: string;
 }
 
-export default function CartDialog({ open, onOpenChange }: CartDialogProps) {
+/**
+ * 장바구니 추가 성공 후 표시되는 Dialog 컴포넌트
+ * 
+ * 사용자가 "장바구니로 이동" 또는 "계속 쇼핑하기"를 선택할 수 있습니다.
+ */
+export default function AddToCartDialog({
+  open,
+  onOpenChange,
+  productName,
+}: AddToCartDialogProps) {
   const router = useRouter();
 
   const handleGoToCart = () => {
@@ -43,14 +44,20 @@ export default function CartDialog({ open, onOpenChange }: CartDialogProps) {
         <DialogHeader>
           <DialogTitle>장바구니에 추가되었습니다</DialogTitle>
           <DialogDescription>
-            상품이 장바구니에 성공적으로 추가되었습니다.
+            {productName}이(가) 장바구니에 추가되었습니다.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleContinueShopping}>
-            쇼핑 계속하기
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            onClick={handleContinueShopping}
+            className="w-full sm:w-auto"
+          >
+            계속 쇼핑하기
           </Button>
-          <Button onClick={handleGoToCart}>장바구니로 이동</Button>
+          <Button onClick={handleGoToCart} className="w-full sm:w-auto">
+            장바구니로 이동
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

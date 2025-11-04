@@ -1,39 +1,61 @@
-/**
- * @file components/cart-icon.tsx
- * @description 장바구니 아이콘 컴포넌트 (Server Component)
- *
- * Navbar에서 사용하는 장바구니 아이콘과 개수 배지를 표시합니다.
- * Server Component로 구현하여 서버 사이드에서 장바구니 개수를 조회합니다.
- *
- * @dependencies
- * - @/actions/cart: getCartSummary Server Action
- * - @clerk/nextjs: SignedIn 컴포넌트
- */
+"use client";
 
-import { SignedIn } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
-import { getCartSummary } from "@/actions/cart";
 import { Badge } from "@/components/ui/badge";
+import { getCartCount } from "@/actions/cart/get-count";
 
-export default async function CartIcon() {
-  // 장바구니 요약 정보 조회
-  const summary = await getCartSummary();
+/**
+ * Navbar에 표시되는 장바구니 아이콘 컴포넌트
+ * 
+ * 현재 사용자의 장바구니 아이템 개수를 표시하고,
+ * 클릭 시 장바구니 페이지로 이동합니다.
+ */
+export default function CartIcon() {
+  const { isLoaded, userId } = useAuth();
+  const [count, setCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isLoaded || !userId) {
+      setCount(0);
+      return;
+    }
+
+    // 장바구니 개수 조회
+    const fetchCount = async () => {
+      const cartCount = await getCartCount();
+      setCount(cartCount);
+    };
+
+    fetchCount();
+
+    // 주기적으로 갱신 (5초마다)
+    const interval = setInterval(fetchCount, 5000);
+
+    return () => clearInterval(interval);
+  }, [isLoaded, userId]);
+
+  if (!isLoaded || !userId) {
+    return null;
+  }
 
   return (
-    <SignedIn>
-      <Link href="/cart" className="relative">
-        <ShoppingCart className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-        {summary.totalItems > 0 && (
-          <Badge
-            variant="destructive"
-            className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-          >
-            {summary.totalItems > 99 ? "99+" : summary.totalItems}
-          </Badge>
-        )}
-      </Link>
-    </SignedIn>
+    <Link
+      href="/cart"
+      className="relative flex items-center justify-center p-2 hover:opacity-70 transition-opacity"
+      aria-label="장바구니"
+    >
+      <ShoppingCart className="w-6 h-6" />
+      {count > 0 && (
+        <Badge
+          className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1.5 text-xs bg-red-500 hover:bg-red-600"
+        >
+          {count > 99 ? "99+" : count}
+        </Badge>
+      )}
+    </Link>
   );
 }
 

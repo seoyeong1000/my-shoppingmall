@@ -146,30 +146,12 @@
 
 ### 장바구니 기능
 
-- [x] 장바구니 추가 API (Server Action)
-  - ✅ addToCart Server Action 구현 (`actions/cart.ts`)
-  - ✅ UPSERT 로직 (이미 존재하면 수량 증가)
-  - ✅ 재고 확인 및 에러 처리
-- [x] 장바구니 조회 API
-  - ✅ getCartItems Server Action 구현 (`actions/cart.ts`)
-  - ✅ 상품 정보 JOIN 조회
-  - ✅ getCartSummary Server Action 구현
-- [x] 장바구니 수정 API (수량 변경)
-  - ✅ updateCartItem Server Action 구현 (`actions/cart.ts`)
-  - ✅ 재고 범위 검증
-- [x] 장바구니 삭제 API
-  - ✅ removeCartItem Server Action 구현 (`actions/cart.ts`)
-  - ✅ clearCart Server Action 구현 (전체 비우기)
-- [x] 장바구니 UI 컴포넌트
-  - ✅ AddToCartButton 컴포넌트 (수량 입력 포함, `components/add-to-cart-button.tsx`)
-  - ✅ CartDialog 컴포넌트 (장바구니 추가 후 Dialog, `components/cart-dialog.tsx`)
-  - ✅ CartItem 컴포넌트 (수량 조절, 삭제, `components/cart-item.tsx`)
-  - ✅ CartSummary 컴포넌트 (총액 요약, 전체 비우기, `components/cart-summary.tsx`)
-  - ✅ 장바구니 페이지 구현 (`app/cart/page.tsx`)
-  - ✅ 상품 상세 페이지에 장바구니 추가 기능 통합
-- [x] 장바구니 아이콘 표시 (Navbar)
-  - ✅ CartIcon 컴포넌트 구현 (`components/cart-icon.tsx`)
-  - ✅ Navbar에 장바구니 아이콘 및 개수 배지 추가
+- [ ] 장바구니 추가 API (Server Action)
+- [ ] 장바구니 조회 API
+- [ ] 장바구니 수정 API (수량 변경)
+- [ ] 장바구니 삭제 API
+- [ ] 장바구니 UI 컴포넌트
+- [ ] 장바구니 아이콘 표시 (Navbar)
 
 ### 주문 프로세스
 
@@ -349,34 +331,18 @@
   - 정렬 변경 시 페이지 자동 리셋 (1페이지로)
   - 카테고리 필터와 정렬 기능 병행 가능
   - 반응형 디자인 (모바일 전체 너비, 데스크톱 최소 150px)
-- ✅ **장바구니 기능 구현 (Phase 3)**
-  - Server Actions 구현 (`actions/cart.ts`)
-    - addToCart: 장바구니 추가 (UPSERT 로직)
-    - getCartItems: 장바구니 조회 (상품 정보 JOIN)
-    - updateCartItem: 수량 변경
-    - removeCartItem: 아이템 삭제
-    - clearCart: 장바구니 전체 비우기
-    - getCartSummary: 장바구니 요약 정보
-  - 타입 정의 (`types/cart.ts`)
-    - CartItem, CartItemWithProduct, CartSummary
-  - UI 컴포넌트
-    - AddToCartButton: 상품 상세 페이지용 (수량 입력 포함)
-    - CartDialog: 장바구니 추가 후 Dialog
-    - CartItem: 장바구니 아이템 (수량 조절, 삭제)
-    - CartSummary: 장바구니 요약 (총액, 전체 비우기)
-    - CartIcon: Navbar용 장바구니 아이콘 (개수 배지)
-  - 페이지 구현
-    - 장바구니 페이지 (`app/cart/page.tsx`)
-    - 상품 상세 페이지에 장바구니 추가 기능 통합
-  - Navbar에 장바구니 아이콘 추가
 
 ### 현재 진행중
 
-- 🔄 장바구니 & 주문 시스템 (Phase 3) - 장바구니 기능 완료
-  - ✅ 장바구니 CRUD 기능 구현 완료
-  - ✅ 장바구니 UI 컴포넌트 구현 완료
-  - ✅ 장바구니 페이지 구현 완료
-  - 📋 주문 프로세스 구현 예정 (Phase 3 남은 작업)
+- 🔄 상품 기능 구현 (Phase 2) - 완료
+  - ✅ 상품 카드 컴포넌트
+  - ✅ 상품 목록 페이지
+  - ✅ 상품 상세 페이지
+  - ✅ 카테고리 필터링 (드롭다운 형식으로 개선 완료)
+  - ✅ 페이지네이션 구현 완료
+  - ✅ 상품 이미지 표시 및 placeholder 구현 완료
+  - ✅ 상품 정렬 기능 구현 완료
+- 🔄 장바구니 & 주문 시스템 (Phase 3)
 
 ### 남은 작업
 

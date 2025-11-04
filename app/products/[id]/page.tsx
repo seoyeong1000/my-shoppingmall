@@ -31,9 +31,9 @@ import { createClerkSupabaseClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ProductImage from "@/components/product-image";
-import AddToCartButton from "@/components/add-to-cart-button";
 import { CATEGORIES } from "@/lib/constants/categories";
 import type { CategoryValue } from "@/lib/constants/categories";
+import AddToCartButton from "@/components/add-to-cart-button";
 
 /**
  * 날짜를 한국어 형식으로 포맷팅합니다.
@@ -269,9 +269,10 @@ export default async function ProductDetailPage(props: { params: Params }) {
                   </div>
                 </div>
 
-                {/* 장바구니 추가 버튼 (수량 입력 포함) */}
+                {/* 장바구니 추가 버튼 */}
                 <AddToCartButton
                   productId={product.id}
+                  productName={product.name}
                   stockQuantity={product.stock_quantity}
                 />
               </div>
