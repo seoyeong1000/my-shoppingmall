@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -17,7 +16,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { createOrder, type CreateOrderRequest } from "@/actions/order/create-order";
+import { saveCheckoutSession } from "@/actions/order/save-checkout-session";
+
+declare global {
+  interface Window {
+    TossPayments?: TossPaymentsFactory;
+  }
+}
+
+type TossPaymentsFactory = (clientKey: string) => TossPaymentsInstance;
+
+interface TossPaymentsInstance {
+  requestPayment(
+    method: "카드",
+    options: {
+      amount: number;
+      orderId: string;
+      orderName: string;
+      customerName?: string;
+      successUrl: string;
+      failUrl: string;
+    }
+  ): Promise<void>;
+}
+
+const PAYMENT_SCRIPT_URL = "https://js.tosspayments.com/v1/payment";
 
 /**
  * 주문 폼 스키마 (Zod)
@@ -48,18 +71,50 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
-interface CheckoutFormProps {
-  onSubmit?: (orderId: string) => void;
-}
-
 /**
  * 주문 폼 컴포넌트
  *
- * 배송 정보 입력 및 주문 생성을 담당합니다.
+ * 배송 정보 입력 및 결제창 호출을 담당합니다.
  */
-export default function CheckoutForm({ onSubmit }: CheckoutFormProps) {
-  const router = useRouter();
+export default function CheckoutForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaymentReady, setIsPaymentReady] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const clientKey = useMemo(
+    () => process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY,
+    []
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (window.TossPayments) {
+      setIsPaymentReady(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = PAYMENT_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => {
+      console.info("CheckoutForm: TossPayments SDK 로드 완료");
+      setIsPaymentReady(true);
+    };
+    script.onerror = () => {
+      console.error("CheckoutForm: TossPayments SDK 로드 실패");
+      setPaymentError("결제 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -74,17 +129,28 @@ export default function CheckoutForm({ onSubmit }: CheckoutFormProps) {
   });
 
   const handleSubmit = async (values: CheckoutFormValues) => {
-    console.group("CheckoutForm: 주문 제출");
+    console.group("checkout:payment-request");
     console.info("formValues", values);
 
     setIsSubmitting(true);
 
     try {
+      if (!clientKey) {
+        console.error("CheckoutForm: 클라이언트 키 미설정");
+        alert("결제 클라이언트 키가 설정되지 않았습니다. 관리자에게 문의해주세요.");
+        return;
+      }
+
+      if (!window?.TossPayments) {
+        console.error("CheckoutForm: TossPayments SDK 미로드");
+        alert(paymentError || "결제 모듈 준비 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
       // 전화번호 형식 정리 (하이픈 제거)
       const phoneCleaned = values.phone.replace(/-/g, "");
 
-      // 주문 생성 요청
-      const request: CreateOrderRequest = {
+      const sessionResult = await saveCheckoutSession({
         shippingAddress: {
           recipientName: values.recipientName,
           phone: phoneCleaned,
@@ -93,34 +159,51 @@ export default function CheckoutForm({ onSubmit }: CheckoutFormProps) {
           detailAddress: values.detailAddress || undefined,
         },
         orderNote: values.orderNote || undefined,
-      };
+      });
 
-      console.info("CheckoutForm: 주문 생성 요청", request);
-
-      const result = await createOrder(request);
-
-      if (!result.success || !result.orderId) {
-        console.error("CheckoutForm: 주문 생성 실패", result.message);
-        alert(result.message || "주문 생성 중 오류가 발생했습니다.");
-        setIsSubmitting(false);
-        console.groupEnd();
+      if (
+        !sessionResult.success ||
+        !sessionResult.orderId ||
+        !sessionResult.amount ||
+        !sessionResult.orderName
+      ) {
+        console.error("CheckoutForm: 결제 세션 생성 실패", sessionResult.message);
+        alert(sessionResult.message || "결제 정보를 준비하는 중 오류가 발생했습니다.");
         return;
       }
 
-      console.info("CheckoutForm: 주문 생성 성공", { orderId: result.orderId });
-      console.groupEnd();
+      const tossPayments = window.TossPayments(clientKey);
 
-      // 주문 완료 페이지로 리다이렉트
-      if (onSubmit) {
-        onSubmit(result.orderId);
-      } else {
-        router.push(`/order/${result.orderId}`);
-      }
-    } catch (error) {
-      console.error("CheckoutForm: 예기치 않은 오류", error);
-      alert("주문 처리 중 예기치 않은 오류가 발생했습니다.");
-      setIsSubmitting(false);
+      console.info("CheckoutForm: 결제창 호출", {
+        orderId: sessionResult.orderId,
+        amount: sessionResult.amount,
+        orderName: sessionResult.orderName,
+      });
+
+      await tossPayments.requestPayment("카드", {
+        amount: sessionResult.amount,
+        orderId: sessionResult.orderId,
+        orderName: sessionResult.orderName,
+        customerName: values.recipientName,
+        successUrl: `${window.location.origin}/checkout/payment/success`,
+        failUrl: `${window.location.origin}/checkout/payment/fail`,
+      });
+
       console.groupEnd();
+    } catch (error) {
+      const errorCode = (error as { code?: string })?.code;
+      const errorMessage =
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+
+      if (errorCode === "USER_CANCEL") {
+        console.warn("CheckoutForm: 사용자가 결제를 취소했습니다.");
+      } else {
+        console.error("CheckoutForm: 예기치 않은 오류", error);
+        alert(`결제를 진행할 수 없습니다. (${errorMessage})`);
+      }
+      console.groupEnd();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -264,10 +347,18 @@ export default function CheckoutForm({ onSubmit }: CheckoutFormProps) {
           type="submit"
           className="w-full"
           size="lg"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !isPaymentReady}
         >
-          {isSubmitting ? "주문 처리 중..." : "주문하기"}
+          {isSubmitting ? "결제 준비 중..." : "결제하기"}
         </Button>
+        {!isPaymentReady && (
+          <p className="text-sm text-muted-foreground text-center">
+            결제 모듈을 불러오는 중입니다...
+          </p>
+        )}
+        {paymentError && (
+          <p className="text-sm text-red-500 text-center">{paymentError}</p>
+        )}
       </form>
     </Form>
   );

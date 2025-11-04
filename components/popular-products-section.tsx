@@ -1,7 +1,11 @@
 /**
  * @file popular-products-section.tsx
- * @description 인기 상품 섹션 컴포넌트 (가로 스크롤 카드 형태)
+ * @description 인기 상품 섹션 컴포넌트 (그리드 레이아웃)
+ * 
+ * 전체 상품 목록과 동일한 그리드 레이아웃을 사용하여 좌/우 간격을 맞춥니다.
  */
+
+import ProductCard from "@/components/product-card";
 
 interface Product {
   id: string;
@@ -23,25 +27,16 @@ interface PopularProductsSectionProps {
 export default function PopularProductsSection({
   products,
 }: PopularProductsSectionProps) {
+  // 최대 4개만 표시
+  const displayedProducts = products.slice(0, 4);
+
   return (
     <section className="w-full max-w-7xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6">인기 상품</h2>
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="flex-shrink-0 w-[280px] rounded-lg border p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="text-sm text-gray-500">{product.category ?? "기타"}</div>
-            <div className="mt-1 font-semibold line-clamp-2">{product.name}</div>
-            {product.description && (
-              <div className="mt-2 text-sm text-gray-600 line-clamp-2">
-                {product.description}
-              </div>
-            )}
-            <div className="mt-3 text-lg font-bold">{product.price.toLocaleString()}원</div>
-            <div className="mt-1 text-xs text-gray-500">재고 {product.stock_quantity}개</div>
-          </div>
+      <h2 className="text-3xl font-bold mb-8">인기 상품</h2>
+      {/* 전체 상품 목록과 동일한 그리드 레이아웃 사용 */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {displayedProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
     </section>

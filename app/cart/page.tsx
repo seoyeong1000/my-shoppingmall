@@ -21,6 +21,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getCartItems } from "@/actions/cart/get-items";
 import CartItem from "@/components/cart-item";
 import CartSummary from "@/components/cart-summary";
+import ClearCartButton from "@/components/clear-cart-button";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -57,7 +58,17 @@ export default async function CartPage() {
   return (
     <main className="min-h-[calc(100vh-80px)] px-4 sm:px-8 py-8 sm:py-16 lg:py-24">
       <div className="w-full max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">장바구니</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">장바구니</h1>
+          {items.length > 0 && (
+            <div className="flex items-center gap-4">
+              <Link href="/products">
+                <Button variant="outline">목록으로 돌아가기</Button>
+              </Link>
+              <ClearCartButton />
+            </div>
+          )}
+        </div>
 
         {items.length === 0 ? (
           // 빈 장바구니 상태

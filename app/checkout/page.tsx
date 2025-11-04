@@ -14,13 +14,13 @@
  * @dependencies
  * - @/actions/cart/get-items: 장바구니 아이템 조회
  * - @/components/checkout-form: 주문 폼 컴포넌트
- * - @/components/cart-item: 장바구니 아이템 표시
+ * - @/components/checkout-item: 주문 요약용 장바구니 아이템 표시
  */
 
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getCartItems } from "@/actions/cart/get-items";
-import CartItem from "@/components/cart-item";
+import CheckoutItem from "@/components/checkout-item";
 import CheckoutForm from "@/components/checkout-form";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -93,9 +93,9 @@ export default async function CheckoutPage() {
               </h2>
 
               {/* 장바구니 아이템 목록 */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 mb-6">
                 {items.map((item) => (
-                  <CartItem key={item.id} item={item} />
+                  <CheckoutItem key={item.id} item={item} />
                 ))}
               </div>
 
