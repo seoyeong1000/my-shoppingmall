@@ -101,17 +101,10 @@ export async function getOrder(orderId: string): Promise<GetOrderResult> {
       };
     }
 
-    // 주문 아이템 조회 (상품 이미지 정보 포함)
+    // 주문 아이템 조회
     const { data: orderItems, error: itemsError } = await supabase
       .from("order_items")
-      .select(
-        `
-        *,
-        products:product_id (
-          image_url
-        )
-      `
-      )
+      .select("*")
       .eq("order_id", orderId)
       .order("created_at", { ascending: true });
 
@@ -131,6 +124,28 @@ export async function getOrder(orderId: string): Promise<GetOrderResult> {
     });
     console.groupEnd();
 
+    // 주문 아이템별 상품 이미지 조회
+    const itemsWithImages = await Promise.all(
+      (orderItems || []).map(async (item: any) => {
+        // 상품 이미지 조회
+        const { data: product } = await supabase
+          .from("products")
+          .select("image_url")
+          .eq("id", item.product_id)
+          .single();
+
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          created_at: item.created_at,
+          image_url: product?.image_url || null,
+        };
+      })
+    );
+
     // 타입 변환
     const orderData: Order = {
       id: order.id,
@@ -141,20 +156,7 @@ export async function getOrder(orderId: string): Promise<GetOrderResult> {
       order_note: order.order_note,
       created_at: order.created_at,
       updated_at: order.updated_at,
-      items: (orderItems || []).map((item: any) => {
-        const product = Array.isArray(item.products)
-          ? item.products[0]
-          : item.products;
-        return {
-          id: item.id,
-          product_id: item.product_id,
-          product_name: item.product_name,
-          quantity: item.quantity,
-          price: Number(item.price),
-          created_at: item.created_at,
-          image_url: product?.image_url || null,
-        };
-      }),
+      items: itemsWithImages,
     };
 
     return {
