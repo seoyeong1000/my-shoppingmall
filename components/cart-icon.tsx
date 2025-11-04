@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,17 +16,33 @@ import { getCartCount } from "@/actions/cart/get-count";
 export default function CartIcon() {
   const { isLoaded, userId } = useAuth();
   const [count, setCount] = useState<number>(0);
+  const prevCountRef = useRef<number>(0);
 
   useEffect(() => {
     if (!isLoaded || !userId) {
+      console.log("[CartIcon] 로그인되지 않음 또는 인증 상태 로딩 중");
       setCount(0);
+      prevCountRef.current = 0;
       return;
     }
 
     // 장바구니 개수 조회
     const fetchCount = async () => {
-      const cartCount = await getCartCount();
-      setCount(cartCount);
+      try {
+        const cartCount = await getCartCount();
+        const previousCount = prevCountRef.current;
+        console.log("[CartIcon] 장바구니 개수 업데이트:", {
+          userId,
+          previousCount,
+          newCount: cartCount,
+        });
+        setCount(cartCount);
+        prevCountRef.current = cartCount;
+      } catch (error) {
+        console.error("[CartIcon] 장바구니 개수 조회 실패:", error);
+        setCount(0);
+        prevCountRef.current = 0;
+      }
     };
 
     fetchCount();

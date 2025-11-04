@@ -50,15 +50,11 @@ export default function CartSummary({ items }: CartSummaryProps) {
 
       <div className="pt-4 border-t">
         <Link href="/checkout" className="block">
-          <Button className="w-full" size="lg" disabled>
-            주문하기 (Phase 4에서 구현 예정)
+          <Button className="w-full" size="lg">
+            주문하기
           </Button>
         </Link>
       </div>
-
-      <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-        * 주문하기 기능은 Phase 4에서 구현 예정입니다.
-      </p>
     </div>
   );
 }

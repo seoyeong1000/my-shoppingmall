@@ -14,9 +14,9 @@
  * 6. 목록으로 돌아가기 링크
  *
  * 레이아웃 구조:
- * - 왼쪽 열: 제품 이미지
- * - 오른쪽 열: 제품 이름, 가격, 재고, 카테고리, 설명, 등록일/수정일, 장바구니 UI
- * - 반응형: 모바일은 1열 (이미지 위, 정보 아래), 데스크톱은 2열
+ * - 왼쪽 열 (2/3): 제품 이미지, 이름, 가격, 재고, 카테고리, 설명, 등록일/수정일
+ * - 오른쪽 열 (1/3): 장바구니 UI (sticky positioning, 데스크톱만)
+ * - 반응형: 모바일은 1열 (이미지 위, 정보 아래, 장바구니 UI 하단), 데스크톱은 3열
  *
  * @dependencies
  * - @/lib/supabase/server: Supabase 클라이언트
@@ -135,10 +135,11 @@ export default async function ProductDetailPage(props: { params: Params }) {
           </Button>
         </Link>
 
-        {/* 상품 상세 정보 - 2열 그리드 레이아웃 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-          {/* 왼쪽 열: 제품 이미지 */}
-          <div className="lg:col-span-1">
+        {/* 상품 상세 정보 - 3열 그리드 레이아웃 (데스크톱), 1열 (모바일) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* 왼쪽 열: 제품 이미지 + 정보 (2/3) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* 제품 이미지 */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 sm:p-8 shadow-sm">
               <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                 <ProductImage
@@ -146,15 +147,12 @@ export default async function ProductDetailPage(props: { params: Params }) {
                   alt={product.name}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  sizes="(max-width: 1024px) 100vw, 66vw"
                   priority
                 />
               </div>
             </div>
-          </div>
 
-          {/* 오른쪽 열: 제품 정보 */}
-          <div className="lg:col-span-1 space-y-6">
             {/* 제품 이름 */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 sm:p-8 shadow-sm">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
@@ -239,42 +237,46 @@ export default async function ProductDetailPage(props: { params: Params }) {
                 )}
               </div>
             </div>
+          </div>
 
-            {/* 장바구니 UI */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                구매하기
-              </h3>
+          {/* 오른쪽 열: 장바구니 UI (1/3, sticky positioning) */}
+          <div className="lg:col-span-1">
+            <div className="lg:sticky lg:top-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                  구매하기
+                </h3>
 
-              <div className="space-y-4">
-                {/* 재고 상태 표시 */}
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex justify-between items-center mb-2">
-                    <span>재고 상태:</span>
-                    <span
-                      className={`font-semibold ${
-                        product.stock_quantity === 0
-                          ? "text-red-500"
-                          : "text-green-600 dark:text-green-400"
-                      }`}
-                    >
-                      {product.stock_quantity === 0 ? "품절" : "구매 가능"}
-                    </span>
+                <div className="space-y-4">
+                  {/* 재고 상태 표시 */}
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex justify-between items-center mb-2">
+                      <span>재고 상태:</span>
+                      <span
+                        className={`font-semibold ${
+                          product.stock_quantity === 0
+                            ? "text-red-500"
+                            : "text-green-600 dark:text-green-400"
+                        }`}
+                      >
+                        {product.stock_quantity === 0 ? "품절" : "구매 가능"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>남은 수량:</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        {product.stock_quantity}개
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span>남은 수량:</span>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100">
-                      {product.stock_quantity}개
-                    </span>
-                  </div>
+
+                  {/* 장바구니 추가 버튼 */}
+                  <AddToCartButton
+                    productId={product.id}
+                    productName={product.name}
+                    stockQuantity={product.stock_quantity}
+                  />
                 </div>
-
-                {/* 장바구니 추가 버튼 */}
-                <AddToCartButton
-                  productId={product.id}
-                  productName={product.name}
-                  stockQuantity={product.stock_quantity}
-                />
               </div>
             </div>
           </div>

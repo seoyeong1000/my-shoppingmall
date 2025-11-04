@@ -79,6 +79,12 @@ export async function addCartItem(
     }
 
     // UPSERT: 같은 상품이 있으면 수량 증가, 없으면 새로 추가
+    console.group("addCartItem: UPSERT");
+    console.info("userId", userId);
+    console.info("productId", productId);
+    console.info("currentQuantity", currentQuantity);
+    console.info("newQuantity", newQuantity);
+
     const { error: upsertError } = await supabase
       .from("cart_items")
       .upsert(
@@ -94,11 +100,19 @@ export async function addCartItem(
 
     if (upsertError) {
       console.error("addCartItem: upsertError", upsertError);
+      console.groupEnd();
       return {
         success: false,
         message: "장바구니에 추가하는 중 오류가 발생했습니다.",
       };
     }
+
+    console.info("addCartItem: 성공", {
+      isNewItem: currentQuantity === 0,
+      previousQuantity: currentQuantity,
+      newQuantity: newQuantity,
+    });
+    console.groupEnd();
 
     // 캐시 무효화
     revalidatePath("/cart");
